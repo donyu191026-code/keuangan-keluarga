@@ -1,2 +1,2 @@
-const SUPABASE_URL = "ISI_PROJECT_URL_KAMU";
-const SUPABASE_ANON_KEY = "ISI_ANON_KEY_KAMU";
+const SUPABASE_URL = "https://lihcdvugefnnprdwicav.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_LIGTs38wuJB4yickc2eXFw_yr8mpFlG";
