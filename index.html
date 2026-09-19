@@ -1,351 +1,54 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ruang Keluarga - Keuangan</title>
+<!doctype html>
+<html lang="id"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#FDFCFA"><link rel="manifest" href="manifest.json">
+<title>Ruang Keluarga — Keuangan</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#FDFCFA;color:#202020;font-family:Arial,sans-serif}
+.wrap,.auth{max-width:760px;margin:auto;padding:20px 16px 90px}.auth{min-height:100vh;display:grid;place-items:center}
+.card{background:#fff;border:1px solid #e9e5df;border-radius:20px;padding:20px}.auth .card{width:min(430px,100%)}
+h1{margin:0 0 5px}p{color:#777}.balance{background:#315c4b;color:white;border-radius:20px;padding:22px;margin:18px 0}.balance h2{font-size:30px;margin:8px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stat{background:#fff;border:1px solid #e9e5df;border-radius:16px;padding:16px}.income{color:#28734f}.expense{color:#b84b4b}
+button,input,select{font:inherit}input,select{width:100%;padding:13px;margin:7px 0;border:1px solid #ddd;border-radius:12px}
+button{border:0;border-radius:12px;padding:13px;font-weight:700}.primary{background:#315c4b;color:#fff;width:100%;margin-top:8px}.link{background:none;color:#315c4b;padding:0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.panel{margin-top:14px}
+.tx{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #eee}.empty{text-align:center;color:#777;padding:25px}
+.modal{display:none;position:fixed;inset:0;background:#0007;align-items:end}.modal.show{display:flex}.sheet{background:#fff;width:100%;max-width:760px;margin:auto;border-radius:22px 22px 0 0;padding:20px}.close{float:right;background:#eee}
+.hidden{display:none!important}.top{display:flex;justify-content:space-between;align-items:center}
+</style></head><body>
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      <script>
-const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-);
+<div id="auth" class="auth"><div class="card">
+<h1>Ruang Keluarga</h1><p>Keuangan Keluarga</p>
+<div id="loginBox"><h2>Masuk</h2><input id="le" type="email" placeholder="Email"><input id="lp" type="password" placeholder="Password"><button class="primary" onclick="login()">Masuk</button><p>Belum punya akun? <button class="link" onclick="registerBox()">Daftar</button></p></div>
+<div id="regBox" class="hidden"><h2>Daftar</h2><input id="rn" placeholder="Nama lengkap"><input id="re" type="email" placeholder="Email"><input id="rp" type="password" placeholder="Password"><button class="primary" onclick="register()">Buat akun</button><p>Sudah punya akun? <button class="link" onclick="loginBox()">Masuk</button></p></div>
+</div></div>
 
-async function daftar(email, password, nama) {
-    const { data, error } = await supabaseClient.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-            data: {
-                full_name: nama
-            }
-        }
-    });
+<main id="app" class="wrap hidden">
+<div class="top"><div><h1>Ruang Keluarga</h1><p>Keuangan Keluarga</p></div><button onclick="logout()">Keluar</button></div>
+<div class="balance"><small>Saldo saat ini</small><h2 id="bal">Rp0</h2></div>
+<div class="stats"><div class="stat"><small>Pemasukan</small><strong id="inc" class="income">Rp0</strong></div><div class="stat"><small>Pengeluaran</small><strong id="exp" class="expense">Rp0</strong></div></div>
+<div class="actions"><button class="primary" onclick="openModal()">+ Tambah Transaksi</button><button onclick="load()">↻ Refresh</button></div>
+<div class="card panel"><h3>Transaksi Terbaru</h3><div id="list" class="empty">Memuat...</div></div>
+</main>
 
-    if (error) {
-        alert("Gagal daftar: " + error.message);
-        return;
-    }
+<div id="modal" class="modal"><div class="sheet"><button class="close" onclick="closeModal()">✕</button><h2>Tambah Transaksi</h2>
+<select id="type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
+<input id="amount" type="number" placeholder="Nominal"><input id="date" type="date"><input id="desc" placeholder="Keterangan">
+<button class="primary" onclick="save()">Simpan Transaksi</button></div></div>
 
-    alert("Pendaftaran berhasil. Silakan cek email untuk konfirmasi.");
-}
-
-async function login(email, password) {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-    });
-
-    if (error) {
-        alert("Login gagal: " + error.message);
-        return;
-    }
-
-    alert("Login berhasil!");
-    location.reload();
-}
-
-async function logout() {
-    await supabaseClient.auth.signOut();
-    location.reload();
-}
-
-async function cekLogin() {
-    const { data: { session } } =
-        await supabaseClient.auth.getSession();
-
-    if (session) {
-        console.log("User login:", session.user.email);
-    } else {
-        console.log("Belum login");
-    }
-}
-
-cekLogin();
-  function tampilkanDaftar() {
-    document.getElementById("loginForm").style.display = "none";
-    document.getElementById("registerForm").style.display = "block";
-}
-
-function tampilkanLogin() {
-    document.getElementById("registerForm").style.display = "none";
-    document.getElementById("loginForm").style.display = "block";
-}
-</script>
-    }
-
-    body {
-      <div id="authPage" class="auth-page">
-    <div class="auth-box">
-        <h1>Ruang Keluarga</h1>
-        <p>Keuangan Keluarga</p>
-
-        <div id="loginForm">
-            <h2>Login</h2>
-
-            <input
-                type="email"
-                id="loginEmail"
-                placeholder="Email"
-                autocomplete="email"
-            >
-
-            <input
-                type="password"
-                id="loginPassword"
-                placeholder="Password"
-                autocomplete="current-password"
-            >
-
-            <button onclick="login(
-                document.getElementById('loginEmail').value,
-                document.getElementById('loginPassword').value
-            )">
-                Masuk
-            </button>
-
-            <p>
-                Belum punya akun?
-                <a href="#" onclick="tampilkanDaftar(); return false;">
-                    Daftar
-                </a>
-            </p>
-        </div>
-
-        <div id="registerForm" style="display:none;">
-            <h2>Daftar Akun</h2>
-
-            <input
-                type="text"
-                id="registerName"
-                placeholder="Nama lengkap"
-            >
-
-            <input
-                type="email"
-                id="registerEmail"
-                placeholder="Email"
-                autocomplete="email"
-            >
-
-            <input
-                type="password"
-                id="registerPassword"
-                placeholder="Password"
-                autocomplete="new-password"
-            >
-
-            <button onclick="daftar(
-                document.getElementById('registerEmail').value,
-                document.getElementById('registerPassword').value,
-                document.getElementById('registerName').value
-            )">
-                Buat Akun
-            </button>
-
-            <p>
-                Sudah punya akun?
-                <a href="#" onclick="tampilkanLogin(); return false;">
-                    Login
-                </a>
-            </p>
-        </div>
-    </div>
-</div>
-      font-family: Arial, sans-serif;
-      background: #f7f7f5;
-      color: #222;
-    }
-
-    .app {
-      max-width: 1100px;
-      margin: auto;
-      min-height: 100vh;
-      padding: 24px;
-    }
-
-    header {
-      margin-bottom: 24px;
-    }
-
-    header h1 {
-      font-size: 28px;
-      margin-bottom: 6px;
-    }
-
-    header p {
-      color: #777;
-    }
-
-    .balance {
-      background: white;
-      border-radius: 18px;
-      padding: 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    }
-
-    .balance small {
-      color: #777;
-    }
-
-    .balance h2 {
-      font-size: 32px;
-      margin-top: 8px;
-    }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-    }
-
-    .card small {
-      color: #777;
-    }
-
-    .card strong {
-      display: block;
-      margin-top: 8px;
-      font-size: 21px;
-    }
-
-    .income {
-      color: #18794e;
-    }
-
-    .expense {
-      color: #b42318;
-    }
-
-    .actions {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    button {
-      border: none;
-      border-radius: 12px;
-      padding: 13px 18px;
-      cursor: pointer;
-      font-size: 15px;
-    }
-
-    .primary {
-      background: #222;
-      color: white;
-    }
-
-    .secondary {
-      background: white;
-      border: 1px solid #ddd;
-    }
-
-    .transactions {
-      background: white;
-      border-radius: 18px;
-      padding: 20px;
-    }
-
-    .transactions h3 {
-      margin-bottom: 16px;
-    }
-
-    .empty {
-      text-align: center;
-      color: #888;
-      padding: 35px 10px;
-    }
-
-    @media (max-width: 600px) {
-      .app {
-        padding: 16px;
-      }
-
-      header h1 {
-        font-size: 24px;
-      }
-
-      .balance h2 {
-        font-size: 27px;
-      }
-
-      .summary {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .actions {
-        flex-direction: column;
-      }
-
-      button {
-        width: 100%;
-      }
-    }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
-</head>
-
-<body>
-
-  <main class="app">
-
-    <header>
-      <h1>Ruang Keluarga</h1>
-      <p>Keuangan Keluarga</p>
-    </header>
-
-    <section class="balance">
-      <small>Saldo Total</small>
-      <h2 id="balance">Rp0</h2>
-    </section>
-
-    <section class="summary">
-      <div class="card">
-        <small>Pemasukan</small>
-        <strong class="income" id="income">Rp0</strong>
-      </div>
-
-      <div class="card">
-        <small>Pengeluaran</small>
-        <strong class="expense" id="expense">Rp0</strong>
-      </div>
-    </section>
-
-    <section class="actions">
-      <button class="primary" onclick="alert('Fitur tambah transaksi akan kita buat berikutnya.')">
-        + Tambah Transaksi
-      </button>
-
-      <button class="secondary" onclick="alert('Fitur laporan akan kita buat berikutnya.')">
-        Lihat Laporan
-      </button>
-    </section>
-
-    <section class="transactions">
-      <h3>Transaksi Terbaru</h3>
-
-      <div class="empty">
-        Belum ada transaksi.
-      </div>
-    </section>
-
-  </main>
-
-</body>
-</html>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script>
+<script>
+let sb,user;
+const $=id=>document.getElementById(id),rp=n=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n||0);
+function loginBox(){$("loginBox").classList.remove("hidden");$("regBox").classList.add("hidden")}
+function registerBox(){$("loginBox").classList.add("hidden");$("regBox").classList.remove("hidden")}
+async function init(){sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);let {data}=await sb.auth.getSession();if(data.session){user=data.session.user;$("auth").classList.add("hidden");$("app").classList.remove("hidden");load()}}
+async function login(){let {error}=await sb.auth.signInWithPassword({email:$("le").value,password:$("lp").value});if(error)return alert(error.message);location.reload()}
+async function register(){let {error}=await sb.auth.signUp({email:$("re").value,password:$("rp").value,options:{data:{full_name:$("rn").value}}});if(error)return alert(error.message);alert("Akun dibuat. Cek email jika konfirmasi email aktif.");loginBox()}
+async function logout(){await sb.auth.signOut();location.reload()}
+function openModal(){$("date").value=new Date().toISOString().slice(0,10);$("modal").classList.add("show")}function closeModal(){$("modal").classList.remove("show")}
+async function save(){let amount=Number($("amount").value),type=$("type").value,date=$("date").value,description=$("desc").value;if(!amount||!date)return alert("Nominal dan tanggal wajib diisi");let {error}=await sb.from("transactions").insert({user_id:user.id,type,amount,transaction_date:date,description});if(error)return alert(error.message);$("amount").value="";$("desc").value="";closeModal();load()}
+async function load(){let {data,error}=await sb.from("transactions").select("*").order("transaction_date",{ascending:false}).limit(50);if(error)return $("list").textContent=error.message;let i=0,e=0;(data||[]).forEach(x=>x.type==="income"?i+=+x.amount:e+=+x.amount);$("inc").textContent=rp(i);$("exp").textContent=rp(e);$("bal").textContent=rp(i-e);$("list").innerHTML=data.length?data.map(x=>`<div class="tx"><span><b>${x.description||"Tanpa keterangan"}</b><br><small>${x.transaction_date||""}</small></span><b class="${x.type}">${x.type==="income"?"+":"-"} ${rp(x.amount)}</b></div>`).join(""):"<div class='empty'>Belum ada transaksi.</div>"}
+init();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script></body></html>
