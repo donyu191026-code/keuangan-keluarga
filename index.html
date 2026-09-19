@@ -10,6 +10,64 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      <script>
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+async function daftar(email, password, nama) {
+    const { data, error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+            data: {
+                full_name: nama
+            }
+        }
+    });
+
+    if (error) {
+        alert("Gagal daftar: " + error.message);
+        return;
+    }
+
+    alert("Pendaftaran berhasil. Silakan cek email untuk konfirmasi.");
+}
+
+async function login(email, password) {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
+
+    if (error) {
+        alert("Login gagal: " + error.message);
+        return;
+    }
+
+    alert("Login berhasil!");
+    location.reload();
+}
+
+async function logout() {
+    await supabaseClient.auth.signOut();
+    location.reload();
+}
+
+async function cekLogin() {
+    const { data: { session } } =
+        await supabaseClient.auth.getSession();
+
+    if (session) {
+        console.log("User login:", session.user.email);
+    } else {
+        console.log("Belum login");
+    }
+}
+
+cekLogin();
+</script>
     }
 
     body {
